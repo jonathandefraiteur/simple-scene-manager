@@ -20,7 +20,7 @@ namespace Editor
 		EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
 	}
 
-	[MenuItem("Window/Scene Shortcut", false, 1400)]
+	[MenuItem("Window/Simple Scene Manager", false, 10000)]
 	public static void Init() {
 		// Get existing open window or if none, make a new one:
 		instance = GetWindow<SceneShortcutWindow>();
