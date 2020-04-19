@@ -46,14 +46,43 @@ namespace Editor
 	void EnabledSceneGUI() {
 
 		var scenes = EditorBuildSettings.scenes;
-		
+
+		if (scenes.Length > 0) {
+			SceneListGUI(ref scenes);
+		}
+		else {
+			NoSceneGUI();
+		}
+
+		BuildSettingsShortcutGUI();
+
+		EditorBuildSettings.scenes = scenes;
+	}
+
+	void BuildSettingsShortcutGUI()
+	{
+		EditorGUILayout.BeginHorizontal();
+		GUILayout.FlexibleSpace();
+		if (GUILayout.Button("Build Settings...")) {
+			EditorApplication.ExecuteMenuItem("File/Build Settings...");
+		}
+		EditorGUILayout.EndHorizontal();
+	}
+
+	void NoSceneGUI()
+	{
+		EditorGUILayout.BeginVertical();
+		EditorGUILayout.HelpBox("No scenes in BuildSettings", MessageType.Info);
+		EditorGUILayout.EndVertical();
+	}
+
+	void SceneListGUI(ref EditorBuildSettingsScene[] scenes)
+	{
 		EditorGUILayout.BeginVertical();
 		for (int i = 0; i < scenes.Length; i++) {
 			SceneGUI(ref scenes[i]);
 		}
 		EditorGUILayout.EndVertical();
-
-		EditorBuildSettings.scenes = scenes;
 	}
 
 	void SceneGUI(ref EditorBuildSettingsScene scene) {
