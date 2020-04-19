@@ -1,6 +1,6 @@
 {
   "name": "com.jonathan-defraiteur.simple-scene-manager",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "displayName": "Simple Scene Manager",
   "description": "A minimalistic tool to help load and manage scenes.",
   "unity": "2017.1",
