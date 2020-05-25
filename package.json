@@ -1,6 +1,6 @@
 {
   "name": "com.jonathan-defraiteur.simple-scene-manager",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "displayName": "Simple Scene Manager",
   "description": "A minimalistic tool to help load and manage scenes.",
   "unity": "2017.1",
@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@gitlab.com:jonathan.defraiteur/simple-scene-manager.git"
+    "url": "git@gitlab.com:jonathan-defraiteur-projects/unity/simple-scene-manager.git"
   },
   "type": "tool"
 }
