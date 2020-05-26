@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -8,11 +9,14 @@ namespace Editor
 {
 	public class SceneShortcutWindow : EditorWindow {
 		private const string playModeSceneToResetKey = "playModeSceneToReset";
+		private const float buttonsWidth = 20f;
 		
 		private static SceneShortcutWindow instance;
+		private static GUIStyle sceneButtonStyle;
 		private static GUIStyle playModeSceneButtonStyle;
 		private static Color playModeSceneButtonColor;
 		private static GUIContent playModeSceneButtonContent;
+		private static GUIContent playSceneButtonContent;
 		
 		public static bool IsOpen => instance != null;
 
@@ -34,17 +38,26 @@ namespace Editor
 
 		private void OnGUI() {
 			if (playModeSceneButtonStyle == null) {
+				sceneButtonStyle = new GUIStyle(EditorStyles.miniButtonMid);
+				sceneButtonStyle.alignment = TextAnchor.MiddleLeft;
+				
 				playModeSceneButtonStyle = new GUIStyle(EditorStyles.miniButtonMid);
 				playModeSceneButtonStyle.fontStyle = FontStyle.Bold;
 				playModeSceneButtonColor = Color.cyan;
 				playModeSceneButtonContent = new GUIContent("»", "Start from this scene when play");
+				
+				playSceneButtonContent = new GUIContent("►", "Play this scene");
 			}
 			
 			EnabledSceneGUI();
 		}
 
-		void EnabledSceneGUI() {
-
+		#region Enabled Scene
+		
+		void EnabledSceneGUI()
+		{
+			var activeScene = EditorSceneManager.GetActiveScene();
+			Debug.Log(activeScene.path);
 			var scenes = EditorBuildSettings.scenes;
 
 			if (scenes.Length > 0) {
@@ -55,6 +68,8 @@ namespace Editor
 			}
 
 			BuildSettingsShortcutGUI();
+			
+			UnusedScenesGUI(ref scenes);
 
 			EditorBuildSettings.scenes = scenes;
 		}
@@ -79,54 +94,47 @@ namespace Editor
 		void SceneListGUI(ref EditorBuildSettingsScene[] scenes)
 		{
 			EditorGUILayout.BeginVertical();
+			int buildIndex = 0;
 			for (int i = 0; i < scenes.Length; i++) {
-				SceneGUI(ref scenes[i]);
+				SceneGUI(ref scenes[i], ref buildIndex);
 			}
 			EditorGUILayout.EndVertical();
 		}
 
-		void SceneGUI(ref EditorBuildSettingsScene scene) {
+		void SceneGUI(ref EditorBuildSettingsScene scene, ref int index) {
 			Color gc = GUI.color;
 			EditorGUILayout.BeginHorizontal();
 			
 			// Enable toggle
-			if (GUILayout.Button(scene.enabled ? "✔" : "", EditorStyles.miniButtonLeft, GUILayout.Width(20f)))
+			if (GUILayout.Button(scene.enabled ? "✔" : "", EditorStyles.miniButtonLeft, GUILayout.Width(buttonsWidth)))
 				ToogleSceneEnabling(ref scene);
 			
+			GUILayout.Label(scene.enabled ? index.ToString() : "", EditorStyles.miniButtonMid, GUILayout.Width(buttonsWidth));
+			index = scene.enabled ? index + 1 : index;
+			
 			// Button to open it (Label)
-			if (GUILayout.Button(SceneFileName(scene), EditorStyles.miniButtonMid))
-				OpenScene(scene);
+			if (GUILayout.Button(SceneGUIContent(scene), sceneButtonStyle))
+				OpenScene(scene.path);
 			
 			// Play button
-			GUI.color = IsScenePlayedAtStart(scene) ? playModeSceneButtonColor : gc;
-			if (GUILayout.Button(playModeSceneButtonContent, playModeSceneButtonStyle, GUILayout.Width(20f))) {
-				TogglePlayModeStartScene(scene);
+			GUI.color = IsScenePlayedAtStart(scene.path) ? playModeSceneButtonColor : gc;
+			if (GUILayout.Button(playModeSceneButtonContent, playModeSceneButtonStyle, GUILayout.Width(buttonsWidth))) {
+				TogglePlayModeStartScene(scene.path);
 			}
 			GUI.color = gc;
-			if (GUILayout.Button("►", EditorStyles.miniButtonRight, GUILayout.Width(20f))) {
-				PlayScene(scene);
+			if (GUILayout.Button(playSceneButtonContent, EditorStyles.miniButtonRight, GUILayout.Width(buttonsWidth))) {
+				PlayScene(scene.path);
 			}
 			
 			EditorGUILayout.EndHorizontal();
 			GUI.color = gc;
 		}
 
-		static string SceneFileName(EditorBuildSettingsScene scene) {
-			return SceneFileName(scene.path);
-		}
-
-		static string SceneFileName(string path) {
-			// Remove extension
-			string pathWithoutExtension = path.Split('.')[0];
-			var pathParts = pathWithoutExtension.Split(new []{'/', '\\'});
-			return pathParts[pathParts.Length - 1];
-		}
-
 		static void ToogleSceneEnabling(ref EditorBuildSettingsScene scene) {
 			scene.enabled = !scene.enabled;
 		}
 
-		static void OpenScene(EditorBuildSettingsScene scene) {
+		static void OpenScene(string scenePath) {
 			if (EditorApplication.isPlayingOrWillChangePlaymode) return;
 			
 			List<Scene> scenesToSave = new List<Scene>();
@@ -137,12 +145,12 @@ namespace Editor
 				}
 			}
 			if (EditorSceneManager.SaveModifiedScenesIfUserWantsTo(scenesToSave.ToArray())) {
-				EditorSceneManager.OpenScene(scene.path);
+				EditorSceneManager.OpenScene(scenePath);
 			}
 		}
 
-		static void PlayScene(EditorBuildSettingsScene scene) {
-			if (IsScenePlayedAtStart(scene)) {
+		static void PlayScene(string scenePath) {
+			if (IsScenePlayedAtStart(scenePath)) {
 				EditorApplication.isPlaying = true;
 				return;
 			}
@@ -153,36 +161,36 @@ namespace Editor
 			else {
 				EditorPrefs.SetString(playModeSceneToResetKey, EditorSceneManager.playModeStartScene.name);
 			}
-			SetPlayModeStartScene(scene);
+			SetPlayModeStartScene(scenePath);
 			EditorApplication.isPlaying = true;
 		}
 
-		static bool IsScenePlayedAtStart(EditorBuildSettingsScene scene) {
+		static bool IsScenePlayedAtStart(string scenePath) {
 			return EditorSceneManager.playModeStartScene != null
-			       && EditorSceneManager.playModeStartScene.name == SceneFileName(scene);
+			       && EditorSceneManager.playModeStartScene.name == SceneFileName(scenePath);
 		}
 
-		static void TogglePlayModeStartScene(EditorBuildSettingsScene scene) {
-			if (IsScenePlayedAtStart(scene)) {
+		static void TogglePlayModeStartScene(string scenePath) {
+			if (IsScenePlayedAtStart(scenePath)) {
 				EditorSceneManager.playModeStartScene = null;
 			}
 			else {
-				SetPlayModeStartScene(scene);
+				SetPlayModeStartScene(scenePath);
 			}
 		}
 		
-		static void SetPlayModeStartScene(EditorBuildSettingsScene scene)
+		static void SetPlayModeStartScene(string scenePath)
 		{
-			SceneAsset myWantedStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(scene.path);
+			SceneAsset myWantedStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath);
 			if (myWantedStartScene != null) {
 				EditorSceneManager.playModeStartScene = myWantedStartScene;
 			}
 			else {
-				Debug.Log("Could not find scene " + scene.path);
+				Debug.Log("Could not find scene " + scenePath);
 			}
 		}
 
-		[MenuItem("Edit/Play First Scene %#&p", false, 149)]
+		[MenuItem("Edit/Play First Scene %#&p", false, 155)]
 		static void PlayFirstScene() {
 			// Get the first scene
 			EditorBuildSettingsScene scene = null;
@@ -197,7 +205,7 @@ namespace Editor
 				return;
 			}
 			
-			PlayScene(scene);
+			PlayScene(scene.path);
 		}
 
 		private static void OnPlayModeStateChanged(PlayModeStateChange state) {
@@ -223,5 +231,81 @@ namespace Editor
 				instance.Repaint();
 			}
 		}
+		
+		#endregion
+
+		#region Global Scenes
+
+		void UnusedScenesGUI(ref EditorBuildSettingsScene[] usedScenes)
+		{
+			string[] usedSceneGUIDs = usedScenes.Select(scene => scene.guid.ToString()).ToArray();
+			string[] sceneGUIDs = AssetDatabase.FindAssets("t:scene");
+			string[] scenePaths = sceneGUIDs
+				.Where(guid => !usedSceneGUIDs.Contains(guid))
+				.Select(AssetDatabase.GUIDToAssetPath)
+				.ToArray();
+			
+			EditorGUILayout.BeginVertical();
+			for (int i = 0; i < scenePaths.Length; i++) {
+				UnusedSceneGUI(ref scenePaths[i]);
+			}
+			EditorGUILayout.EndVertical();
+		}
+		
+		void UnusedSceneGUI(ref string scenePath) {
+			Color gc = GUI.color;
+			EditorGUILayout.BeginHorizontal();
+			
+			// Enable toggle
+
+			if (GUILayout.Button("+", EditorStyles.miniButtonLeft, GUILayout.Width(buttonsWidth))) {
+			//	ToogleSceneEnabling(ref scene);
+			}
+			
+			
+			// Button to open it (Label)
+			if (GUILayout.Button(SceneGUIContent(scenePath), sceneButtonStyle)) {
+				OpenScene(scenePath);
+			}
+
+			// Play button
+			//GUI.color = IsScenePlayedAtStart(scene) ? playModeSceneButtonColor : gc;
+			if (GUILayout.Button("+", playModeSceneButtonStyle, GUILayout.Width(buttonsWidth))) {
+			//	TogglePlayModeStartScene(scene);
+			}
+			//GUI.color = gc;
+			if (GUILayout.Button(playSceneButtonContent, EditorStyles.miniButtonRight, GUILayout.Width(buttonsWidth))) {
+				PlayScene(scenePath);
+			}
+			
+			EditorGUILayout.EndHorizontal();
+			GUI.color = gc;
+		}
+
+		#endregion
+
+		#region Utility
+
+		static string SceneFileName(EditorBuildSettingsScene scene) {
+			return SceneFileName(scene.path);
+		}
+
+		static string SceneFileName(string path) {
+			// Remove extension
+			string pathWithoutExtension = path.Split('.')[0];
+			var pathParts = pathWithoutExtension.Split(new []{'/', '\\'});
+			return pathParts[pathParts.Length - 1];
+		}
+
+		static GUIContent SceneGUIContent(EditorBuildSettingsScene scene)
+		{
+			return SceneGUIContent(scene.path);
+		}
+		static GUIContent SceneGUIContent(string path)
+		{
+			return new GUIContent(SceneFileName(path), path);
+		}
+
+		#endregion
 	}
 }
