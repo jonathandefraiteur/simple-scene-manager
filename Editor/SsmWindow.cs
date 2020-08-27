@@ -8,7 +8,6 @@ using UnityEngine.SceneManagement;
 namespace JonathanDefraiteur.SimpleSceneManager.Editor
 {
 	public class SsmWindow : EditorWindow {
-		private const string playModeSceneToResetKey = "playModeSceneToReset";
 		private const float buttonsWidth = 20f;
 		
 		private static SsmWindow instance;
@@ -63,14 +62,14 @@ namespace JonathanDefraiteur.SimpleSceneManager.Editor
 		void EnabledSceneGUI()
 		{
 			var activeScene = EditorSceneManager.GetActiveScene();
-			Debug.Log(activeScene.path);
+			Debug.Log($"Active Scene: {activeScene.path}");
 			var scenes = EditorBuildSettings.scenes;
 
 			if (scenes.Length > 0) {
 				SceneListGUI(ref scenes);
 			}
 			else {
-				NoSceneGUI();
+				SsmGUI.NoSceneInBuildSettings();
 			}
 
 			BuildSettingsShortcutGUI();
@@ -84,17 +83,8 @@ namespace JonathanDefraiteur.SimpleSceneManager.Editor
 		{
 			EditorGUILayout.BeginHorizontal();
 			GUILayout.FlexibleSpace();
-			if (GUILayout.Button("Build Settings...")) {
-				EditorApplication.ExecuteMenuItem("File/Build Settings...");
-			}
+			SsmGUI.BuildSettingsButton();
 			EditorGUILayout.EndHorizontal();
-		}
-
-		void NoSceneGUI()
-		{
-			EditorGUILayout.BeginVertical();
-			EditorGUILayout.HelpBox("No scenes in BuildSettings", MessageType.Info);
-			EditorGUILayout.EndVertical();
 		}
 
 		void SceneListGUI(ref EditorBuildSettingsScene[] scenes)
@@ -113,125 +103,47 @@ namespace JonathanDefraiteur.SimpleSceneManager.Editor
 			
 			// Enable toggle
 			if (GUILayout.Button(scene.enabled ? "✔" : "", EditorStyles.miniButtonLeft, GUILayout.Width(buttonsWidth)))
-				ToogleSceneEnabling(ref scene);
+				SsmAction.ToggleSceneEnabling(ref scene);
 			
 			GUILayout.Label(scene.enabled ? index.ToString() : "", EditorStyles.miniButtonMid, GUILayout.Width(buttonsWidth));
 			index = scene.enabled ? index + 1 : index;
 			
 			// Button to open it (Label)
-			if (GUILayout.Button(SceneGUIContent(scene), sceneButtonStyle))
-				OpenScene(scene.path);
+			if (GUILayout.Button(SsmUtility.SceneGUIContent(scene), sceneButtonStyle))
+				SsmAction.OpenScene(scene.path);
 			
 			// Play button
-			GUI.color = IsScenePlayedAtStart(scene.path) ? playModeSceneButtonColor : gc;
+			GUI.color = SsmUtility.IsScenePlayedAtStart(scene.path) ? playModeSceneButtonColor : gc;
 			if (GUILayout.Button(playModeSceneButtonContent, playModeSceneButtonStyle, GUILayout.Width(buttonsWidth))) {
-				TogglePlayModeStartScene(scene.path);
+				SsmAction.TogglePlayModeStartScene(scene.path);
 			}
 			GUI.color = gc;
 			if (GUILayout.Button(playSceneButtonContent, EditorStyles.miniButtonRight, GUILayout.Width(buttonsWidth))) {
-				PlayScene(scene.path);
+				SsmAction.PlayScene(scene.path);
 			}
 			
 			EditorGUILayout.EndHorizontal();
 			GUI.color = gc;
 		}
 
-		static void ToogleSceneEnabling(ref EditorBuildSettingsScene scene) {
-			scene.enabled = !scene.enabled;
-		}
-
-		static void OpenScene(string scenePath) {
-			if (EditorApplication.isPlayingOrWillChangePlaymode) return;
-			
-			List<Scene> scenesToSave = new List<Scene>();
-			for (int i = 0; i < EditorSceneManager.sceneCount; i++) {
-				Scene sceneAt = EditorSceneManager.GetSceneAt(i);
-				if (sceneAt.isDirty) {
-					scenesToSave.Add(sceneAt);
-				}
-			}
-			if (EditorSceneManager.SaveModifiedScenesIfUserWantsTo(scenesToSave.ToArray())) {
-				EditorSceneManager.OpenScene(scenePath);
-			}
-		}
-
-		static void PlayScene(string scenePath) {
-			if (IsScenePlayedAtStart(scenePath)) {
-				EditorApplication.isPlaying = true;
-				return;
-			}
-
-			if (EditorSceneManager.playModeStartScene == null) {
-				EditorPrefs.SetString(playModeSceneToResetKey, "null");
-			}
-			else {
-				EditorPrefs.SetString(playModeSceneToResetKey, EditorSceneManager.playModeStartScene.name);
-			}
-			SetPlayModeStartScene(scenePath);
-			EditorApplication.isPlaying = true;
-		}
-
-		static bool IsScenePlayedAtStart(string scenePath) {
-			return EditorSceneManager.playModeStartScene != null
-			       && EditorSceneManager.playModeStartScene.name == SceneFileName(scenePath);
-		}
-
-		static void TogglePlayModeStartScene(string scenePath) {
-			if (IsScenePlayedAtStart(scenePath)) {
-				EditorSceneManager.playModeStartScene = null;
-			}
-			else {
-				SetPlayModeStartScene(scenePath);
-			}
-		}
-		
-		static void SetPlayModeStartScene(string scenePath)
-		{
-			SceneAsset myWantedStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath);
-			if (myWantedStartScene != null) {
-				EditorSceneManager.playModeStartScene = myWantedStartScene;
-			}
-			else {
-				Debug.Log("Could not find scene " + scenePath);
-			}
-		}
-
-		[MenuItem("Edit/Play First Scene %#&p", false, 155)]
-		static void PlayFirstScene() {
-			// Get the first scene
-			EditorBuildSettingsScene scene = null;
-			foreach (EditorBuildSettingsScene buildScene in EditorBuildSettings.scenes) {
-				if (!buildScene.enabled)
-					continue;
-				scene = buildScene;
-				break;
-			}
-			if (scene == null) {
-				Debug.LogError("No scene enabled in build settings");
-				return;
-			}
-			
-			PlayScene(scene.path);
-		}
-
 		private static void OnPlayModeStateChanged(PlayModeStateChange state) {
 			if (state != PlayModeStateChange.EnteredPlayMode) return;
-			if (!EditorPrefs.HasKey(playModeSceneToResetKey)) return;
+			if (!EditorPrefs.HasKey(SsmUtility.PlayModeSceneToResetKey)) return;
 
-			string playModeSceneToReset = EditorPrefs.GetString(playModeSceneToResetKey);
+			string playModeSceneToReset = EditorPrefs.GetString(SsmUtility.PlayModeSceneToResetKey);
 			if (playModeSceneToReset == "null") {
 				EditorSceneManager.playModeStartScene = null;
 			}
 			else {
 				foreach (EditorBuildSettingsScene settingsScene in EditorBuildSettings.scenes) {
-					if (playModeSceneToReset != SceneFileName(settingsScene)) continue;
+					if (playModeSceneToReset != SsmUtility.SceneFileName(settingsScene)) continue;
 
 					var sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(settingsScene.path);
 					EditorSceneManager.playModeStartScene = sceneAsset;
 					break;
 				}
 			}
-			EditorPrefs.DeleteKey(playModeSceneToResetKey);
+			EditorPrefs.DeleteKey(SsmUtility.PlayModeSceneToResetKey);
 
 			if (IsOpen) {
 				instance.Repaint();
@@ -270,8 +182,8 @@ namespace JonathanDefraiteur.SimpleSceneManager.Editor
 			
 			
 			// Button to open it (Label)
-			if (GUILayout.Button(SceneGUIContent(scenePath), sceneButtonStyle)) {
-				OpenScene(scenePath);
+			if (GUILayout.Button(SsmUtility.SceneGUIContent(scenePath), sceneButtonStyle)) {
+				SsmAction.OpenScene(scenePath);
 			}
 
 			// Play button
@@ -281,35 +193,11 @@ namespace JonathanDefraiteur.SimpleSceneManager.Editor
 			}
 			//GUI.color = gc;
 			if (GUILayout.Button(playSceneButtonContent, EditorStyles.miniButtonRight, GUILayout.Width(buttonsWidth))) {
-				PlayScene(scenePath);
+				SsmAction.PlayScene(scenePath);
 			}
 			
 			EditorGUILayout.EndHorizontal();
 			GUI.color = gc;
-		}
-
-		#endregion
-
-		#region Utility
-
-		private static string SceneFileName(EditorBuildSettingsScene scene) {
-			return SceneFileName(scene.path);
-		}
-
-		private static string SceneFileName(string path) {
-			// Remove extension
-			string pathWithoutExtension = path.Split('.')[0];
-			string[] pathParts = pathWithoutExtension.Split(new []{'/', '\\'});
-			return pathParts[pathParts.Length - 1];
-		}
-
-		static GUIContent SceneGUIContent(EditorBuildSettingsScene scene)
-		{
-			return SceneGUIContent(scene.path);
-		}
-		static GUIContent SceneGUIContent(string path)
-		{
-			return new GUIContent(SceneFileName(path), path);
 		}
 
 		#endregion
