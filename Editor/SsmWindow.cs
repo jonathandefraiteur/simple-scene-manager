@@ -5,13 +5,13 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace JonathanDefraiteur.Editor
+namespace JonathanDefraiteur.SimpleSceneManager.Editor
 {
-	public class SceneShortcutWindow : EditorWindow {
+	public class SsmWindow : EditorWindow {
 		private const string playModeSceneToResetKey = "playModeSceneToReset";
 		private const float buttonsWidth = 20f;
 		
-		private static SceneShortcutWindow instance;
+		private static SsmWindow instance;
 		private static GUIStyle sceneButtonStyle;
 		private static GUIStyle playModeSceneButtonStyle;
 		private static Color playModeSceneButtonColor;
@@ -22,14 +22,14 @@ namespace JonathanDefraiteur.Editor
 		
 		public static bool IsOpen => instance != null;
 
-		static SceneShortcutWindow() {
+		static SsmWindow() {
 			EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
 		}
 
 		[MenuItem("Window/Simple Scene Manager", false, 10000)]
 		public static void Init() {
 			// Get existing open window or if none, make a new one:
-			instance = GetWindow<SceneShortcutWindow>();
+			instance = GetWindow<SsmWindow>();
 			instance.Show();
 			instance.titleContent = new GUIContent("Scenes");
 		}
