@@ -5,7 +5,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Editor
+namespace JonathanDefraiteur.Editor
 {
 	public class SceneShortcutWindow : EditorWindow {
 		private const string playModeSceneToResetKey = "playModeSceneToReset";
@@ -17,6 +17,8 @@ namespace Editor
 		private static Color playModeSceneButtonColor;
 		private static GUIContent playModeSceneButtonContent;
 		private static GUIContent playSceneButtonContent;
+		private static GUIStyle addSceneButtonStyle;
+		private static GUIContent addSceneButtonContent;
 		
 		public static bool IsOpen => instance != null;
 
@@ -47,6 +49,10 @@ namespace Editor
 				playModeSceneButtonContent = new GUIContent("»", "Start from this scene when play");
 				
 				playSceneButtonContent = new GUIContent("►", "Play this scene");
+				
+				addSceneButtonStyle = new GUIStyle(EditorStyles.miniButtonLeft);
+				addSceneButtonStyle.fontStyle = FontStyle.Bold;
+				addSceneButtonContent = new GUIContent("+", "Add this scene to the build");
 			}
 			
 			EnabledSceneGUI();
@@ -258,7 +264,7 @@ namespace Editor
 			
 			// Enable toggle
 
-			if (GUILayout.Button("+", EditorStyles.miniButtonLeft, GUILayout.Width(buttonsWidth))) {
+			if (GUILayout.Button(addSceneButtonContent, addSceneButtonStyle, GUILayout.Width(buttonsWidth))) {
 			//	ToogleSceneEnabling(ref scene);
 			}
 			
@@ -270,7 +276,7 @@ namespace Editor
 
 			// Play button
 			//GUI.color = IsScenePlayedAtStart(scene) ? playModeSceneButtonColor : gc;
-			if (GUILayout.Button("+", playModeSceneButtonStyle, GUILayout.Width(buttonsWidth))) {
+			if (GUILayout.Button("", playModeSceneButtonStyle, GUILayout.Width(buttonsWidth))) {
 			//	TogglePlayModeStartScene(scene);
 			}
 			//GUI.color = gc;
@@ -286,14 +292,14 @@ namespace Editor
 
 		#region Utility
 
-		static string SceneFileName(EditorBuildSettingsScene scene) {
+		private static string SceneFileName(EditorBuildSettingsScene scene) {
 			return SceneFileName(scene.path);
 		}
 
-		static string SceneFileName(string path) {
+		private static string SceneFileName(string path) {
 			// Remove extension
 			string pathWithoutExtension = path.Split('.')[0];
-			var pathParts = pathWithoutExtension.Split(new []{'/', '\\'});
+			string[] pathParts = pathWithoutExtension.Split(new []{'/', '\\'});
 			return pathParts[pathParts.Length - 1];
 		}
 
