@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -51,12 +52,11 @@ namespace JonathanDefraiteur.SimpleSceneManager.Editor
         public static void SetPlayModeStartScene(string scenePath)
         {
             SceneAsset myWantedStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath);
-            if (myWantedStartScene != null) {
-                EditorSceneManager.playModeStartScene = myWantedStartScene;
-            }
-            else {
+            if (myWantedStartScene == null) {
                 Debug.Log("Could not find scene " + scenePath);
+                return;
             }
+            EditorSceneManager.playModeStartScene = myWantedStartScene;
         }
 
         public static void TogglePlayModeStartScene(string scenePath) {
@@ -72,6 +72,20 @@ namespace JonathanDefraiteur.SimpleSceneManager.Editor
 
         public static void ToggleSceneEnabling(ref EditorBuildSettingsScene scene) {
             scene.enabled = !scene.enabled;
+        }
+
+        public static void AddSceneInBuild(string scenePath, ref EditorBuildSettingsScene[] context)
+        {
+            var scenes = new List<EditorBuildSettingsScene>(context);
+            scenes.Add(new EditorBuildSettingsScene(scenePath, true));
+            context = scenes.ToArray();
+        }
+
+        public static void RemoveSceneInBuild(string scenePath, ref EditorBuildSettingsScene[] context)
+        {
+            context = context
+                .Where(_s => _s.path != scenePath)
+                .ToArray();
         }
 
         #endregion
@@ -91,6 +105,11 @@ namespace JonathanDefraiteur.SimpleSceneManager.Editor
             if (EditorSceneManager.SaveModifiedScenesIfUserWantsTo(scenesToSave.ToArray())) {
                 EditorSceneManager.OpenScene(scenePath);
             }
+        }
+
+        public static void SelectScene(string scenePath)
+        {
+            Selection.activeObject = AssetDatabase.LoadMainAssetAtPath(scenePath);
         }
 
         #endregion
