@@ -8,6 +8,8 @@ namespace JonathanDefraiteur.SimpleSceneManager.Editor
 	public class SsmWindow : EditorWindow {
 		
 		private static SsmWindow instance;
+		private static Vector2 buildScrollPosition = Vector2.zero;
+		private static Vector2 otherScrollPosition = Vector2.zero;
 		
 		public static bool IsOpen => instance != null;
 
@@ -28,33 +30,46 @@ namespace JonathanDefraiteur.SimpleSceneManager.Editor
 		}
 
 		private void OnGUI() {
+			// Debug.Log($"{Screen.width} / {Screen.height}");
 			EnabledSceneGUI();
 		}
 
 		#region Enabled Scene
-		
-		void EnabledSceneGUI()
+
+		private void EnabledSceneGUI()
 		{
 			var activeScene = EditorSceneManager.GetActiveScene();
 			var scenes = EditorBuildSettings.scenes;
 			
+			// Build scenes
 			BuildScenesTitleGUI();
 			
 			if (scenes.Length > 0) {
+				buildScrollPosition = EditorGUILayout.BeginScrollView(buildScrollPosition, GetBuildScenesHeightOption(scenes.Length));
 				SceneListGUI(ref scenes);
+				EditorGUILayout.EndScrollView();
 			}
 			else {
 				SsmGUI.NoSceneInBuildSettings();
 			}
-
-			OtherScenesTitleGUI();
 			
+			// Other scenes
+			OtherScenesTitleGUI();
+
+			otherScrollPosition = EditorGUILayout.BeginScrollView(otherScrollPosition, GUILayout.ExpandHeight(true));
 			UnusedScenesGUI(ref scenes);
+			GUILayout.EndScrollView();
 			
 			EditorBuildSettings.scenes = scenes;
 		}
 
-		void BuildScenesTitleGUI()
+		private GUILayoutOption GetBuildScenesHeightOption(int _sceneCount, int _lineHeight = 21)
+		{
+			int height = _sceneCount * _lineHeight;
+			return height > Screen.height / 2 ? GUILayout.ExpandHeight(true) : GUILayout.Height(height);
+		}
+
+		private void BuildScenesTitleGUI()
 		{
 			EditorGUILayout.BeginHorizontal();
 			GUILayout.Label("Scenes in build");
@@ -63,12 +78,12 @@ namespace JonathanDefraiteur.SimpleSceneManager.Editor
 			EditorGUILayout.EndHorizontal();
 		}
 
-		void OtherScenesTitleGUI()
+		private void OtherScenesTitleGUI()
 		{
 			GUILayout.Label("Others in project");
 		}
 
-		void SceneListGUI(ref EditorBuildSettingsScene[] scenes)
+		private void SceneListGUI(ref EditorBuildSettingsScene[] scenes)
 		{
 			EditorGUILayout.BeginVertical();
 			int buildIndex = 0;
@@ -78,7 +93,7 @@ namespace JonathanDefraiteur.SimpleSceneManager.Editor
 			EditorGUILayout.EndVertical();
 		}
 
-		void SceneGUI(ref EditorBuildSettingsScene[] context, int index, ref int buildIndex)
+		private void SceneGUI(ref EditorBuildSettingsScene[] context, int index, ref int buildIndex)
 		{
 			EditorBuildSettingsScene scene = context[index];
 			
@@ -146,7 +161,7 @@ namespace JonathanDefraiteur.SimpleSceneManager.Editor
 
 		#region Global Scenes
 
-		void UnusedScenesGUI(ref EditorBuildSettingsScene[] usedScenes)
+		private void UnusedScenesGUI(ref EditorBuildSettingsScene[] usedScenes)
 		{
 			string[] usedSceneGUIDs = usedScenes.Select(scene => scene.guid.ToString()).ToArray();
 			string[] sceneGUIDs = AssetDatabase.FindAssets("t:scene");
@@ -162,7 +177,7 @@ namespace JonathanDefraiteur.SimpleSceneManager.Editor
 			EditorGUILayout.EndVertical();
 		}
 		
-		void UnusedSceneGUI(string scenePath, ref EditorBuildSettingsScene[] context) {
+		private void UnusedSceneGUI(string scenePath, ref EditorBuildSettingsScene[] context) {
 			Color gc = GUI.color;
 			EditorGUILayout.BeginHorizontal();
 			
