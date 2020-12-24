@@ -29,7 +29,7 @@ Add the following to your dependencies:
 # ./Packages/manifest.json
 {
   "dependencies": {
-    "com.jonathan-defraiteur.unity.simple-scene-manager": "https://gitlab.com/jonathan-defraiteur/unity/simple-scene-manager.git",
+    "com.jonathan-defraiteur.unity.simple-scene-manager": "https://gitlab.com/jonathan-defraiteur-projects/unity/simple-scene-manager.git",
     ...
   }
 }
