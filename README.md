@@ -8,7 +8,7 @@ then add `com.jonathan-defraiteur.unity.simple-scene-manager` to your dependenci
 # ./Packages/manifest.json
 {
   "dependencies": {
-    "com.jonathan-defraiteur.unity.simple-scene-manager": "1.2.1"
+    "com.jonathan-defraiteur.unity.simple-scene-manager": "1.3.0"
     ...
   },
   "scopedRegistries": [

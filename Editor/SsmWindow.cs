@@ -172,6 +172,10 @@ namespace JonathanDefraiteur.SimpleSceneManager.Editor
 			
 			EditorGUILayout.BeginVertical();
 			for (int i = 0; i < scenePaths.Length; i++) {
+
+				if(SsmSettings.settings.pathsToIgnore.Any(x => scenePaths[i].StartsWith(x)))
+					continue;
+				
 				UnusedSceneGUI(scenePaths[i], ref usedScenes);
 			}
 			EditorGUILayout.EndVertical();
