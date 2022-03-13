@@ -1,6 +1,6 @@
 {
   "name": "com.jonathan-defraiteur.unity.simple-scene-manager",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "displayName": "Simple Scene Manager",
   "description": "A minimalistic tool to help load and manage scenes.",
   "unity": "2017.1",
@@ -9,7 +9,8 @@
     "scene",
     "loader",
     "manager",
-    "unity"
+    "unity",
+    "unity3d"
   ],
   "author": {
     "name": "Jonathan Defraiteur",
@@ -22,9 +23,10 @@
       "url": "https://adrienmasse.com"
     }
   ],
+  "homepage": "https://github.com/jonathandefraiteur/simple-scene-manager#readme",
   "repository": {
     "type": "git",
-    "url": "git@gitlab.com:jonathan-defraiteur-projects/unity/packages/simple-scene-manager.git"
+    "url": "git@github.com:jonathandefraiteur/simple-scene-manager.git"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"

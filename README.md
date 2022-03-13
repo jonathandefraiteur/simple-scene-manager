@@ -1,6 +1,9 @@
-# To Install
+# Simple Scene Manager v1.3.1
+A minimalistic tool to help load and manage scenes.
 
-## Via scoped registries
+## To Install
+
+### Via scoped registries
 Setup your scoped registry,
 then add `com.jonathan-defraiteur.unity.simple-scene-manager` to your dependencies:
 
@@ -8,7 +11,7 @@ then add `com.jonathan-defraiteur.unity.simple-scene-manager` to your dependenci
 # ./Packages/manifest.json
 {
   "dependencies": {
-    "com.jonathan-defraiteur.unity.simple-scene-manager": "1.3.0"
+    "com.jonathan-defraiteur.unity.simple-scene-manager": "1.3.1"
     ...
   },
   "scopedRegistries": [
@@ -23,13 +26,25 @@ then add `com.jonathan-defraiteur.unity.simple-scene-manager` to your dependenci
 }
 ```
 
-## Via gitlab url
+### Via GitLab url
 Add the following to your dependencies:
 ```
 # ./Packages/manifest.json
 {
   "dependencies": {
     "com.jonathan-defraiteur.unity.simple-scene-manager": "https://gitlab.com/jonathan-defraiteur-projects/unity/simple-scene-manager.git",
+    ...
+  }
+}
+```
+
+### Via GitHub url
+Add the following to your dependencies:
+```
+# ./Packages/manifest.json
+{
+  "dependencies": {
+    "com.jonathan-defraiteur.unity.simple-scene-manager": "https://github.com/jonathandefraiteur/simple-scene-manager.git",
     ...
   }
 }
